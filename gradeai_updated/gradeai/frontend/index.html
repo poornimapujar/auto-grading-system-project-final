@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   GradeAI
+  </title>
+  <link href="css/style.css" rel="stylesheet"/>
+ </head>
+ <body>
+  <main class="login-shell">
+   <aside class="login-art">
+    <div class="logo-mark">
+     G
+    </div>
+    <p class="eyebrow">
+     SMART ASSESSMENT PLATFORM
+    </p>
+    <h1>
+     GradeAI
+    </h1>
+    <h2>
+     Automatic descriptive answer evaluation
+    </h2>
+    <p>
+     Fair assessment. Consistent grading. Better learning.
+    </p>
+   </aside>
+   <section class="login-panel">
+    <h2>
+     Welcome back
+    </h2>
+    <p>
+     Choose your portal to continue.
+    </p>
+    <div class="tabs">
+     <button class="active" data-role="student">
+      Student
+     </button>
+     <button data-role="teacher">
+      Teacher
+     </button>
+    </div>
+    <form id="loginForm">
+     <label id="idLabel">
+      University Seat Number (USN)
+     </label>
+     <input autocomplete="username" id="loginId" placeholder="Enter your USN" required=""/>
+     <label>
+      Password
+     </label>
+     <input autocomplete="current-password" id="loginPassword" placeholder="Enter password" required="" type="password"/>
+     <div hidden="" id="registerFields">
+      <label>
+       Confirm password
+      </label>
+      <input autocomplete="new-password" id="regPassword2" placeholder="Re-enter password" type="password"/>
+      <label>
+       Full name
+      </label>
+      <input id="regName" placeholder="Enter your full name"/>
+      <div hidden="" id="codeField">
+       <label>
+        Teacher access code
+       </label>
+       <input id="regCode" placeholder="Code shown in the server window"/>
+      </div>
+     </div>
+     <p class="error" id="loginError">
+     </p>
+     <button class="primary full" id="submitBtn">
+      Sign in &rarr;
+     </button>
+    </form>
+    <p style="text-align:center;margin:14px 0 0"><a href="#" id="toggleMode" style="color:var(--purple);font-weight:700;font-size:13px;text-decoration:none">New here? Create an account</a></p>
+    <p class="hint" id="loginHint">
+     Create an account the first time, then sign in.
+    </p>
+   </section>
+  </main>
+  <script src="js/app.js">
+  </script>
+ </body>
+</html>

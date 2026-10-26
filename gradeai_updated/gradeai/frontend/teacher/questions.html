@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Manage Questions | GradeAI
+  </title>
+  <link href="../css/style.css" rel="stylesheet"/>
+ </head>
+ <body>
+  <header>
+   <a class="brand" href="../index.html">
+    GradeAI
+   </a>
+   <a href="dashboard.html">
+    Dashboard
+   </a>
+   <button onclick="logout()">
+    Sign out
+   </button>
+  </header>
+  <main class="page">
+   <p class="eyebrow">
+    TEACHER PORTAL
+   </p>
+   <h1>
+    Manage questions
+   </h1>
+   <section class="card">
+    <h2>
+     Add a question
+    </h2>
+    <form class="form-grid" id="questionForm">
+     <label for="nqText">Question</label>
+     <textarea id="nqText" rows="2" required></textarea>
+     <label for="nqMarks">Maximum marks</label>
+     <input id="nqMarks" type="number" min="1" max="100" step="0.5" value="10" required/>
+     <label for="nqRef">Reference answer (the ideal answer the AI compares with)</label>
+     <textarea id="nqRef" rows="5" required></textarea>
+     <label for="nqConcepts">Expected concepts (comma separated)</label>
+     <input id="nqConcepts" placeholder="e.g. modularity, testing, documentation"/>
+     <label for="nqScheme">Marking scheme (optional)</label>
+     <textarea id="nqScheme" rows="3" placeholder="e.g. 2 marks for definition, 3 marks for explanation, 5 marks for examples"></textarea>
+     <button class="primary" type="submit">
+      Add question
+     </button>
+     <p id="nqMessage">
+     </p>
+    </form>
+   </section>
+   <div id="questionList">
+    Loading...
+   </div>
+  </main>
+  <script src="../js/app.js">
+  </script>
+ </body>
+</html>

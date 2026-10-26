@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Submission History | GradeAI
+  </title>
+  <link href="../css/style.css" rel="stylesheet"/>
+ </head>
+ <body>
+  <header>
+   <a class="brand" href="../index.html">
+    GradeAI
+   </a>
+   <a href="dashboard.html">
+    Dashboard
+   </a>
+   <a href="questions.html">
+    Questions
+   </a>
+   <button onclick="logout()">
+    Sign out
+   </button>
+  </header>
+  <main class="page">
+   <h1>
+    Submission history
+   </h1>
+   <section class="card">
+    <div class="table-wrap">
+     <table>
+      <thead>
+       <tr>
+        <th>
+         Student USN
+        </th>
+        <th>
+         Submitted
+        </th>
+        <th>
+         Status
+        </th>
+        <th>
+         Action
+        </th>
+       </tr>
+      </thead>
+      <tbody id="historyRows">
+      </tbody>
+     </table>
+    </div>
+   </section>
+  </main>
+  <script src="../js/app.js">
+  </script>
+ </body>
+</html>

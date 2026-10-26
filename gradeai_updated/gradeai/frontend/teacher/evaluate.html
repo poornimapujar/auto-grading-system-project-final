@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Answer Evaluation | GradeAI
+  </title>
+  <link href="../css/style.css" rel="stylesheet"/>
+ </head>
+ <body>
+  <header>
+   <a class="brand" href="../index.html">
+    GradeAI
+   </a>
+   <a href="dashboard.html">
+    Dashboard
+   </a>
+   <a href="questions.html">
+    Questions
+   </a>
+   <button onclick="logout()">
+    Sign out
+   </button>
+  </header>
+  <main class="page">
+   <p class="eyebrow">
+    REVIEW SUBMISSION
+   </p>
+   <h1>
+    Answer evaluation
+   </h1>
+   <section class="card">
+    <p id="studentDetails">
+    </p>
+    <h2>
+     Student response
+    </h2>
+    <div class="response" id="studentAnswer">
+    </div>
+    <div class="actions">
+     <button class="primary" id="evaluateAI">
+      ✦ Evaluate with AI
+     </button>
+     <button class="secondary" id="teacherEvaluate">
+      Teacher evaluation
+     </button>
+    </div>
+    <div hidden="" id="manualPanel">
+     <h2>
+      Teacher evaluation
+     </h2>
+     <p id="manualTotal">
+      Enter marks for each criterion.
+     </p>
+     <form id="manualForm">
+      <div class="mark-grid">
+       <label>
+        <span id="mCorrectnessLabel">Correctness</span>
+        <input id="mCorrectness" max="3" min="0" required="" step="0.5" type="number" value="0"/>
+       </label>
+       <label>
+        <span id="mRelevanceLabel">Relevance</span>
+        <input id="mRelevance" max="2" min="0" required="" step="0.5" type="number" value="0"/>
+       </label>
+       <label>
+        <span id="mCompletenessLabel">Completeness</span>
+        <input id="mCompleteness" max="3" min="0" required="" step="0.5" type="number" value="0"/>
+       </label>
+       <label>
+        <span id="mCoverageLabel">Concept coverage</span>
+        <input id="mCoverage" max="2" min="0" required="" step="0.5" type="number" value="0"/>
+       </label>
+      </div>
+      <button class="primary" type="submit">
+       Save teacher evaluation
+      </button>
+      <p class="success" id="manualMessage">
+      </p>
+     </form>
+    </div>
+    <div hidden="" id="evaluationResult">
+     <h2>
+      Evaluation result
+     </h2>
+     <div id="evalBlocks">
+     </div>
+     <p class="success" id="savedStatus">
+     </p>
+    </div>
+   </section>
+  </main>
+  <script src="../js/app.js">
+  </script>
+ </body>
+</html>

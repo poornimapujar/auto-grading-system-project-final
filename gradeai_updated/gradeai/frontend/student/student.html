@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Student Portal | GradeAI
+  </title>
+  <link href="../css/style.css" rel="stylesheet"/>
+ </head>
+ <body>
+  <header>
+   <a class="brand" href="../index.html">
+    GradeAI
+   </a>
+   <button onclick="logout()">
+    Sign out
+   </button>
+  </header>
+  <main class="page">
+   <p class="eyebrow">
+    STUDENT PORTAL
+   </p>
+   <h1>
+    Submit your answer
+   </h1>
+   <section class="card">
+    <label for="questionSelect"><strong>Choose question</strong></label>
+    <select class="select-input" id="questionSelect"></select>
+    <span class="pill" id="qPill"></span>
+    <h2 id="qText"></h2>
+   </section>
+   <section class="card">
+    <div class="row">
+     <h2>
+      Your answer
+     </h2>
+     <span id="wordCount">
+      0 words
+     </span>
+    </div>
+    <textarea id="answerText" placeholder="Start typing your answer here..." rows="12"></textarea>
+    <button class="primary" id="submitAnswer">
+     Submit answer &rarr;
+    </button>
+    <p id="submitMessage">
+    </p>
+   </section>
+   <section class="card">
+    <h2>
+     My results
+    </h2>
+    <div id="studentResults">
+     No evaluated submissions yet.
+    </div>
+   </section>
+  </main>
+  <script src="../js/app.js">
+  </script>
+ </body>
+</html>
