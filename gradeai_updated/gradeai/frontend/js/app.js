@@ -300,10 +300,12 @@ async function loadQuestionsPage() {
       await api('/api/questions', {
         method: 'POST',
         body: JSON.stringify({
+          subject: document.getElementById('nqSubject').value.trim(),
           question_text: document.getElementById('nqText').value.trim(),
           maximum_marks: Number(document.getElementById('nqMarks').value),
           reference_answer: document.getElementById('nqRef').value.trim(),
           expected_concepts: document.getElementById('nqConcepts').value,
+          subject: document.getElementById('nqSubject').value.trim(),
           marking_scheme: document.getElementById('nqScheme').value.trim()
         })
       });
@@ -313,6 +315,47 @@ async function loadQuestionsPage() {
       qMsg.textContent = 'Question added.';
       refresh();
     } catch (ex) { qMsg.className = 'error'; qMsg.textContent = ex.message; }
+  };
+    document.getElementById('materialForm').onsubmit = async ev => {
+    ev.preventDefault();
+
+    const message = document.getElementById('materialMessage');
+    const file = document.getElementById('materialFile').files[0];
+    const subject = document.getElementById('materialSubject').value.trim();
+
+    if (!file) {
+      message.className = 'error';
+      message.textContent = 'Please select a file.';
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('subject', subject);
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/materials/upload', {
+        method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + token()
+}, 
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Upload failed.');
+      }
+
+      message.className = 'success';
+      message.textContent = 'Study material uploaded successfully!';
+      ev.target.reset();
+
+    } catch (ex) {
+      message.className = 'error';
+      message.textContent = ex.message;
+    }
   };
   refresh();
 }

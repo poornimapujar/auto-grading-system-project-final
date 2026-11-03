@@ -32,6 +32,8 @@
      Add a question
     </h2>
     <form class="form-grid" id="questionForm">
+        <label for="nqSubject">Subject</label>
+<input id="nqSubject" type="text" placeholder="e.g. DBMS, Java, Operating Systems" required/>
      <label for="nqText">Question</label>
      <textarea id="nqText" rows="2" required></textarea>
      <label for="nqMarks">Maximum marks</label>
@@ -49,6 +51,34 @@
      </p>
     </form>
    </section>
+   <section class="card">
+  <h2>Upload Study Material</h2>
+  <p>Upload teacher-provided notes or reference material for AI grading.</p>
+
+  <form class="form-grid" id="materialForm">
+    <label for="materialSubject">Subject</label>
+    <input
+      id="materialSubject"
+      type="text"
+      placeholder="e.g. DBMS"
+      required
+    />
+
+    <label for="materialFile">Select study material (PDF or DOCX)</label>
+    <input
+      id="materialFile"
+      type="file"
+      accept=".pdf,.docx"
+      required
+    />
+
+    <button class="primary" type="submit">
+      Upload Material
+    </button>
+
+    <p id="materialMessage"></p>
+  </form>
+</section>
    <div id="questionList">
     Loading...
    </div>
