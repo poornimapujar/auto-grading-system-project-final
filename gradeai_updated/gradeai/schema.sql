@@ -18,8 +18,23 @@ CREATE TABLE IF NOT EXISTS questions (
     maximum_marks     REAL NOT NULL DEFAULT 10,
     reference_answer  TEXT NOT NULL DEFAULT '',
     expected_concepts TEXT NOT NULL DEFAULT '[]',
-    marking_scheme    TEXT NOT NULL DEFAULT ''
+    marking_scheme    TEXT NOT NULL DEFAULT '',
+    subject           TEXT NOT NULL DEFAULT 'General'
 );
+
+-- Teacher-uploaded study materials
+CREATE TABLE IF NOT EXISTS study_materials (
+    material_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    teacher_username TEXT NOT NULL REFERENCES teachers(username),
+    subject          TEXT NOT NULL,
+    filename         TEXT NOT NULL,
+    file_path        TEXT NOT NULL DEFAULT '',
+    extracted_text   TEXT NOT NULL,
+    uploaded_at      TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_materials_subject
+ON study_materials(subject);
 -- Teacher-graded sample answers per question. They are put in the LLM prompt (few-shot prompting)
 -- so the model can calibrate how strict to be. marks = total marks the teacher gave (out of the question's maximum).
 CREATE TABLE IF NOT EXISTS graded_examples (

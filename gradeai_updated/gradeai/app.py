@@ -5,6 +5,9 @@ Flow: Browser --JSON--> Flask --prompt--> LLM --ratings--> Flask (marks computed
 """
 import json
 import os
+from werkzeug.utils import secure_filename
+from pypdf import PdfReader
+from docx import Document
 import re
 import secrets
 import sqlite3
@@ -25,6 +28,9 @@ TOKEN_HOURS = 8
 MAX_ANSWER_CHARS = 8000
 
 app = Flask(__name__, static_folder=FRONTEND, static_url_path="")
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 
 def _load_secret():
@@ -73,6 +79,21 @@ def preflight(_):
 
 def err(msg, code=400):
     return jsonify({"error": msg}), code
+
+def extract_text_from_file(file_path, extension):
+    if extension == ".pdf":
+        reader = PdfReader(file_path)
+        return "\n".join(
+            page.extract_text() or "" for page in reader.pages
+        )
+
+    elif extension == ".docx":
+        document = Document(file_path)
+        return "\n".join(
+            paragraph.text for paragraph in document.paragraphs
+        )
+
+    return ""
 
 
 def auth(role):
@@ -135,7 +156,7 @@ def ser_sub(s, with_answer=False):
     return out
 
 
-def run_grader(question, reference, answer, max_marks, concepts, scheme="", examples=None):
+def run_grader(question, reference, answer, max_marks, concepts, scheme="", examples=None, study_material=""):
     """Pick a grader. GRADER_MODE: auto (default) | claude | ollama | offline.
     auto = Claude if ANTHROPIC_API_KEY is set, else the free local Ollama model, else the offline grader.
     Any failure falls back to the next option, and finally to the offline grader."""
@@ -148,7 +169,12 @@ def run_grader(question, reference, answer, max_marks, concepts, scheme="", exam
     reasons = []
     for fn in providers:
         try:
-            return fn(question, reference, answer, max_marks, concepts, scheme=scheme, examples=examples)
+            return fn(
+    question, reference, answer, max_marks, concepts,
+    scheme=scheme,
+    examples=examples,
+    study_material=study_material
+)
         except Exception as exc:
             app.logger.warning("%s failed: %s", fn.__name__, exc)
             reasons.append(str(exc)[:200])
@@ -272,10 +298,16 @@ def evaluate_ai(sid):
     s = database.get_submission(sid)
     if not s:
         return err("Submission not found", 404)
+
     q = database.get_question(s["question_id"])
+    study_material = database.get_study_material_text(q.get("subject", "General"))
+
     result = run_grader(q["question_text"], q["reference_answer"], s["answer_text"],
                         q["maximum_marks"], q["expected_concepts"],
-                        scheme=q.get("marking_scheme", ""), examples=database.list_examples(q["question_id"]))
+                        scheme=q.get("marking_scheme", ""),
+                        examples=database.list_examples(q["question_id"]),
+                        study_material=study_material)
+
     database.save_evaluation(sid, "AI", result["marks"], result["score"], "AI evaluation completed.", result)
     saved = database.get_submission(sid)["evaluations"]["AI"]
     out = ser_eval(saved)
@@ -319,8 +351,15 @@ def questions():
 @auth("student")
 def public_questions():
     """What a student may see: no reference answer, concepts, scheme or examples."""
-    return jsonify([{"question_id": q["question_id"], "question_text": q["question_text"],
-                     "maximum_marks": q["maximum_marks"]} for q in database.list_questions()])
+    return jsonify([
+        {
+            "question_id": q["question_id"],
+            "question_text": q["question_text"],
+            "maximum_marks": q["maximum_marks"],
+            "subject": q["subject"]
+        }
+        for q in database.list_questions()
+    ])
 
 
 @app.post("/api/questions")
@@ -341,8 +380,55 @@ def create_question():
     if isinstance(concepts, str):
         concepts = [c.strip() for c in concepts.split(",") if c.strip()]
     scheme = str(d.get("marking_scheme") or "").strip()
-    return jsonify({"id": database.add_question(text, marks, ref, concepts, scheme)}), 201
+    subject = str(d.get("subject") or "General").strip()
+    return jsonify({"id": database.add_question(text, marks, ref, concepts, scheme, subject)}), 201
+@app.post("/api/materials/upload")
+@auth("teacher")
+def upload_material():
+    subject = request.form.get("subject", "General").strip()
+    uploaded_file = request.files.get("file")
 
+    if not subject:
+        return err("Please select a subject.")
+
+    if not uploaded_file or not uploaded_file.filename:
+        return err("Please select a file.")
+
+    original_name = secure_filename(uploaded_file.filename)
+    extension = os.path.splitext(original_name)[1].lower()
+
+    if extension not in (".pdf", ".docx"):
+        return err("Only PDF and DOCX files are allowed.")
+
+    unique_name = secrets.token_hex(8) + "_" + original_name
+    file_path = os.path.join(app.config["UPLOAD_FOLDER"], unique_name)
+
+    try:
+        uploaded_file.save(file_path)
+        extracted_text = extract_text_from_file(file_path, extension)
+
+        if not extracted_text.strip():
+            os.remove(file_path)
+            return err("No readable text found in the uploaded file.")
+
+        material_id = database.add_study_material(
+            g.user["id"],
+            subject,
+            original_name,
+            file_path,
+            extracted_text
+        )
+
+        return jsonify({
+            "message": "Study material uploaded successfully.",
+            "material_id": material_id,
+            "subject": subject
+        }), 201
+
+    except Exception as e:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        return err(f"Could not process the file: {str(e)}")
 
 # ------------------------------------------------------------------ graded examples (few-shot prompting)
 @app.get("/api/questions/<int:qid>/examples")

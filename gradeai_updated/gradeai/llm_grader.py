@@ -47,21 +47,39 @@ def pick_examples(examples, max_marks, per_band=2):
     return bands["low"][:per_band] + bands["medium"][:per_band] + bands["high"][:per_band]
 
 
-def build_user_prompt(question, reference_answer, student_answer, max_marks, concepts, scheme, examples=None):
-    parts = [f"QUESTION:\n{question or '(not provided)'}",
-             f"REFERENCE ANSWER:\n{reference_answer}",
-             f"MAXIMUM MARKS: {max_marks}"]
+def build_user_prompt(question, reference_answer, student_answer, max_marks, concepts, scheme, examples=None, study_material=""):
+    parts = [
+        f"QUESTION:\n{question or '(not provided)'}",
+        f"REFERENCE ANSWER:\n{reference_answer}",
+        f"MAXIMUM MARKS: {max_marks}"
+    ]
+
     if concepts:
         parts.append("EXPECTED CONCEPTS:\n- " + "\n- ".join(concepts))
+
     if scheme:
         parts.append(f"MARKING SCHEME:\n{scheme}")
+
+    if study_material:
+        parts.append(
+            "TEACHER'S UPLOADED STUDY MATERIAL (additional context):\n"
+            "Use this material to understand acceptable answers and terminology. "
+            "The reference answer and marking scheme remain the primary grading criteria.\n"
+            + study_material[:12000]
+        )
+
     chosen = pick_examples(examples, max_marks)
+
     if chosen:
         block = ["GRADED EXAMPLES (already marked by the teacher; use only to calibrate strictness):"]
         for i, e in enumerate(chosen, 1):
-            block.append(f"Example {i}, teacher gave {e['marks']:g} out of {max_marks:g}:\n<<<\n{e['answer_text']}\n>>>")
+            block.append(
+                f"Example {i}, teacher gave {e['marks']:g} out of {max_marks:g}:\n<<<\n{e['answer_text']}\n>>>"
+            )
         parts.append("\n\n".join(block))
+
     parts.append(f"STUDENT ANSWER:\n<<<\n{student_answer}\n>>>")
+
     return "\n\n".join(parts)
 
 
@@ -96,7 +114,7 @@ def _build_result(data, max_marks, provider, model, force_review=False):
     }
 
 
-def grade_with_claude(question, reference_answer, student_answer, max_marks, concepts=None, scheme=None, examples=None):
+def grade_with_claude(question, reference_answer, student_answer, max_marks, concepts=None, scheme=None, examples=None, study_material=""):
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         raise RuntimeError("ANTHROPIC_API_KEY is not set")
@@ -110,7 +128,7 @@ def grade_with_claude(question, reference_answer, student_answer, max_marks, con
             "temperature": 0,  # same input -> (almost) same output
             "system": SYSTEM_PROMPT,
             "messages": [{"role": "user", "content": build_user_prompt(
-                question, reference_answer, student_answer, max_marks, concepts, scheme, examples)}],
+                question, reference_answer, student_answer, max_marks, concepts, scheme, examples, study_material)}],
         },
         timeout=60,
     )
@@ -119,7 +137,7 @@ def grade_with_claude(question, reference_answer, student_answer, max_marks, con
     return _build_result(_extract_json(text), max_marks, "claude", model)
 
 
-def grade_with_ollama(question, reference_answer, student_answer, max_marks, concepts=None, scheme=None, examples=None):
+def grade_with_ollama(question, reference_answer, student_answer, max_marks, concepts=None, scheme=None, examples=None, study_material=""):
     """Free local model through Ollama (https://ollama.com). No API key, no token limits."""
     base = os.environ.get("OLLAMA_URL", DEFAULT_OLLAMA_URL).rstrip("/")
     model = os.environ.get("OLLAMA_MODEL", DEFAULT_OLLAMA_MODEL)
@@ -134,7 +152,7 @@ def grade_with_ollama(question, reference_answer, student_answer, max_marks, con
                 "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": build_user_prompt(
-                        question, reference_answer, student_answer, max_marks, concepts, scheme, examples)},
+                       question, reference_answer, student_answer, max_marks, concepts, scheme, examples, study_material)},
                 ],
             },
             timeout=300,  # a small model on a CPU laptop can take a while

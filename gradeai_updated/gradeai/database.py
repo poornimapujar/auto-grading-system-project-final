@@ -47,6 +47,8 @@ def init_db():
         cols = [r["name"] for r in conn.execute("PRAGMA table_info(questions)")]
         if "marking_scheme" not in cols:
             conn.execute("ALTER TABLE questions ADD COLUMN marking_scheme TEXT NOT NULL DEFAULT ''")
+        if "subject" not in cols:
+            conn.execute("ALTER TABLE questions ADD COLUMN subject TEXT NOT NULL DEFAULT 'General'")
         if not conn.execute("SELECT 1 FROM questions").fetchone():
             conn.execute("INSERT INTO questions (question_text, maximum_marks, reference_answer, expected_concepts) "
                          "VALUES (?, ?, ?, ?)", (SEED_QUESTION, 10, SEED_REFERENCE, json.dumps(SEED_CONCEPTS)))
@@ -94,16 +96,29 @@ def get_question(qid=None):
     return _q(r) if r else None
 
 
-def list_questions():
+def list_questions(subject=None):
     with db() as c:
-        return [_q(r) for r in c.execute("SELECT * FROM questions ORDER BY question_id")]
+        if subject:
+            rows = c.execute(
+                "SELECT * FROM questions WHERE subject = ? ORDER BY question_id",
+                (subject,)
+            ).fetchall()
+        else:
+            rows = c.execute(
+                "SELECT * FROM questions ORDER BY question_id"
+            ).fetchall()
+
+        return [_q(r) for r in rows]
 
 
-def add_question(text, marks, reference, concepts, scheme=""):
+def add_question(text, marks, reference, concepts, scheme="", subject="General"):
     with db() as c:
-        return c.execute("INSERT INTO questions (question_text, maximum_marks, reference_answer, expected_concepts, "
-                         "marking_scheme) VALUES (?, ?, ?, ?, ?)",
-                         (text, marks, reference, json.dumps(concepts), scheme)).lastrowid
+        return c.execute(
+            "INSERT INTO questions "
+            "(question_text, maximum_marks, reference_answer, expected_concepts, marking_scheme, subject) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (text, marks, reference, json.dumps(concepts), scheme, subject)
+        ).lastrowid
 
 
 # ---------------------------------------------------------------- graded examples (few-shot)
@@ -177,3 +192,36 @@ def save_evaluation(sid, method, marks, total, summary, details):
             (sid, method, marks["correctness"], marks["relevance"], marks["completeness"],
              marks["concept_coverage"], total, summary, json.dumps(details), now()))
         c.execute("UPDATE submissions SET status = 'Evaluated' WHERE submission_id = ?", (sid,))
+# ---------------------------------------------------------------- study materials
+
+def add_study_material(teacher_username, subject, filename, file_path, extracted_text):
+    with db() as c:
+        return c.execute(
+            "INSERT INTO study_materials "
+            "(teacher_username, subject, filename, file_path, extracted_text, uploaded_at) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (teacher_username, subject, filename, file_path, extracted_text, now())
+        ).lastrowid
+
+
+def list_study_materials(subject):
+    with db() as c:
+        return [dict(r) for r in c.execute(
+            "SELECT material_id, teacher_username, subject, filename, uploaded_at "
+            "FROM study_materials WHERE subject = ? ORDER BY material_id DESC",
+            (subject,)
+        )]
+
+
+def get_study_material_text(subject):
+    with db() as c:
+        rows = c.execute(
+            "SELECT filename, extracted_text FROM study_materials "
+            "WHERE subject = ? ORDER BY material_id",
+            (subject,)
+        ).fetchall()
+
+    return "\n\n".join(
+        f"STUDY MATERIAL: {r['filename']}\n{r['extracted_text']}"
+        for r in rows
+    )
